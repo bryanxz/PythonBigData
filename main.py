@@ -1,121 +1,71 @@
-from ftplib import print_line
-
 import requests
 import json
 import pandas as pd
 
-df=pd.read_csv('mercadolivreconsole - com plaintext.csv')
-
-print(df.head(10))
-# URL da API loca()l do Ollama
+# URL da API local do Ollama
 url = "http://localhost:11434/api/generate"
 
-# Parâmetros para a geração de texto
-print("Descrição: ")
-descricao = input()
-payloads = [
+# Ler o arquivo CSV
+df = pd.read_csv('mercadolivreconsole.csv', encoding='ISO-8859-1')
 
-    {
-        "model": "llama3.1:8b",  # Especifica o modelo 8B
-        "prompt": "Com base na seguinte descrição: " + descricao + ", separada por vírgulas, analise se o console tem defeito. Se o console tiver qualquer defeito, responda apenas com o número 1. Se o console não tiver defeito ou se essa informação não estiver na descrição, responda apenas com o número 0. Não inclua mais nada na resposta, apenas o número."
-
-    },
-
-    {
-        "model": "llama3.1:8b",  # Especifica o modelo 8B
-        "prompt": "Com base na seguinte descrição: " + descricao + ", separada por vírgulas, analise se o console tem defeito na tela. Se o console tiver qualquer defeito na tela, responda apenas com o número 1. Se o console não tiver defeito na tela ou se essa informação não estiver na descrição, responda apenas com o número 0. Não inclua mais nada na resposta, apenas o número."
-
-    },
-
-    {
-        "model": "llama3.1:8b",  # Especifica o modelo 8B
-        "prompt": "Com base na seguinte descrição: " + descricao + ", separada por vírgulas, analise se o console tem defeito no hd. Se o console tiver qualquer defeito no hd, responda apenas com o número 1. Se o console não tiver defeito no hd ou se essa informação não estiver na descrição, responda apenas com o número 0. Não inclua mais nada na resposta, apenas o número."
-
-    },
-
-    {
-        "model": "llama3.1:8b",  # Especifica o modelo 8B
-        "prompt": "Com base na seguinte descrição: " + descricao + ", separada por vírgulas, analise se o console tem defeito na placa. Se o console tiver qualquer defeito na placa, responda apenas com o número 1. Se o console não tiver defeito na placa ou se essa informação não estiver na descrição, responda apenas com o número 0. Não inclua mais nada na resposta, apenas o número."
-
-    },
-
-    {
-        "model": "llama3.1:8b",  # Especifica o modelo 8B
-        "prompt": "Com base na seguinte descrição: " + descricao + ", separada por vírgulas, analise se o console tem defeito na fonte. Se o console tiver qualquer defeito na fonte, responda apenas com o número 1. Se o console não tiver defeito na fonte ou se essa informação não estiver na descrição, responda apenas com o número 0. Não inclua mais nada na resposta, apenas o número."
-
-    },
-
-    {
-        "model": "llama3.1:8b",  # Especifica o modelo 8B
-        "prompt": "Com base na seguinte descrição: " + descricao + ", separada por vírgulas, analise se o console tem defeito na carcaça. Se o console tiver qualquer defeito na carcaça, responda apenas com o número 1. Se o console não tiver defeito na carcaça ou se essa informação não estiver na descrição, responda apenas com o número 0. Não inclua mais nada na resposta, apenas o número."
-
-    },
-
-    {
-        "model": "llama3.1:8b",  # Especifica o modelo 8B
-        "prompt": "Com base na seguinte descrição: " + descricao + ", separada por vírgulas, analise se o console é modificado. Se o console for modificado, responda apenas com o número 1. Se o console não for modificado ou se essa informação não estiver na descrição, responda apenas com o número 0. Não inclua mais nada na resposta, apenas o número."
-
-    },
-
-    {
-        "model": "llama3.1:8b",  # Especifica o modelo 8B
-        "prompt": "Com base na seguinte descrição: " + descricao + ", separada por vírgulas, analise se o console é destravado. Se o console for destravado, responda apenas com o número 1. Se o console não for destravado ou se essa informação não estiver na descrição, responda apenas com o número 0. Não inclua mais nada na resposta, apenas o número."
-
-    },
-
-    {
-        "model": "llama3.1:8b",  # Especifica o modelo 8B
-        "prompt": "Com base na seguinte descrição: " + descricao + ", separada por vírgulas, analise se o console tem itens inclusos. Se o console tiver itens inclusos, responda apenas com o número 1. Se o console não tiver itens inclusos ou se essa informação não estiver na descrição, responda apenas com o número 0. Não inclua mais nada na resposta, apenas o número."
-
-    },
-
-    {
-        "model": "llama3.1:8b",  # Especifica o modelo 8B
-        "prompt": "Com base na seguinte descrição: " + descricao + ", separada por vírgulas, analise se o console tem jogos inclusos. Se o console tiver  jogos inclusos, responda apenas com o número 1. Se o console não tiver  jogos inclusos ou se essa informação não estiver na descrição, responda apenas com o número 0. Não inclua mais nada na resposta, apenas o número."
-
-    },
-
-    {
-        "model": "llama3.1:8b",  # Especifica o modelo 8B
-        "prompt": "Com base na seguinte descrição: " + descricao + ", responda a quantidade de jogos inclusos, se não tiver essa informação na descrição retorne 0. Não inclua mais nada na resposta, apenas o número de jogos inclusos."
-
-    },
-
-    {
-        "model": "llama3.1:8b",  # Especifica o modelo 8B
-        "prompt": "Com base na seguinte descrição: " + descricao + ", responda a quantidade de controles inclusos, se não tiver essa informação na descrição retorne 0. Não inclua mais nada na resposta, apenas o número de controles inclusos."
-
-    },
-]
-
-
+print("Colunas disponíveis:", df.columns)
 
 # Cabeçalhos da requisição
 headers = {
     "Content-Type": "application/json"
 }
 
-for payload in payloads:
-# Faz a requisição POST para a API do Ollama
-    response = requests.post(url, headers=headers, data=json.dumps(payload))
+# Acumular resultados
+resultados = []
 
+# Definir as perguntas
+perguntas = [
+    ("defeito", "analise se o console tem defeito."),
+    ("defeito na tela", "analise se o console tem defeito na tela."),
+    ("defeito no hd", "analise se o console tem defeito no hd."),
+    ("defeito na placa", "analise se o console tem defeito na placa."),
+    ("defeito na fonte", "analise se o console tem defeito na fonte."),
+    ("defeito na carcaça", "analise se o console tem defeito na carcaça."),
+    ("modificado", "analise se o console é modificado."),
+    ("destravado", "analise se o console é destravado."),
+    ("itens inclusos", "analise se o console tem itens inclusos."),
+    ("jogos inclusos", "analise se o console tem jogos inclusos."),
+    ("quantidade de jogos", "responda a quantidade de jogos inclusos."),
+    ("quantidade de controles", "responda a quantidade de controles inclusos."),
+]
+
+# Processar cada descrição do CSV
+for descricao in df['descricao']:
     response_acumulator = ""
-# Verifica se a requisição foi bem-sucedida
-    for line in response.iter_lines():
 
-        try:
-                # Decodifica cada linha como JSON
-            data = json.loads(line.decode('utf-8'))
-          # Exibe o campo 'text'
-            response_acumulator += data['response']
-            print(data['response'])
+    for chave, pergunta in perguntas:
+        payload = {
+            "model": "llama3.1:8b",
+            "prompt": f"Com base na seguinte descrição: {descricao}, separada por vírgulas, {pergunta} Se o console tiver qualquer defeito, responda apenas com o número 1. Se o console não tiver defeito ou se essa informação não estiver na descrição, responda apenas com o número 0. Não inclua mais nada na resposta, apenas o número."
+        }
 
-        except json.JSONDecodeError as e:
-            print(f"Erro ao decodificar JSON: {e}")
-            print(f"Linha com erro: {line}")
+        # Faz a requisição POST para a API do Ollama
+        response = requests.post(url, headers=headers, data=json.dumps(payload))
 
+        # Verifica se a requisição foi bem-sucedida
+        if response.status_code == 200:
+            for line in response.iter_lines():
+                try:
+                    # Decodifica cada linha como JSON
+                    data = json.loads(line.decode('utf-8'))
+                    response_acumulator += data['response']
+                    print(data['response'])  # Imprime a resposta
+                except json.JSONDecodeError as e:
+                    print(f"Erro ao decodificar JSON: {e}")
+                    print(f"Linha com erro: {line}")
+        else:
+            print(f"Erro na requisição: {response.status_code}")
 
-#print(response_acumulator)
+    # Armazena o resultado acumulado para cada descrição
+    resultados.append(response_acumulator)
 
+# Adiciona os resultados ao DataFrame
+df['resultado'] = resultados
 
-
+# Salva os resultados em um novo arquivo CSV
+df.to_csv('resultado.csv', index=False)
